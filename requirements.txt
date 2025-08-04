@@ -1,0 +1,13 @@
+torch
+transformers
+datasets
+accelerate
+peft
+trl
+bitsandbytes
+scipy
+evaluate
+rouge-score
+wandb
+pandas
+numpy
