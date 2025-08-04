@@ -2,6 +2,7 @@ import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer
 from peft import PeftModel
 import os
+import csv
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "3"
 from config import MODEL_NAME
@@ -28,44 +29,68 @@ def generate(model, tokenizer, prompt):
     response = tokenizer.decode(outputs[0], skip_special_tokens=True)
     return response[len(prompt):].strip()
 
-def main(test_prompt):
-    print("=== COMPARING MODELS ===\n")
-    
-    # Original model
-    print("1. ORIGINAL MODEL:")
-    model, tokenizer = load_model(MODEL_NAME)
-    response = generate(model, tokenizer, test_prompt)
-    print(response)
-    del model, tokenizer
-    torch.cuda.empty_cache()
-    
-    print("\n" + "="*50 + "\n")
-    
-    # SFT model
-    print("2. SFT MODEL:")
-    if os.path.exists("./results/sft"):
-        model, tokenizer = load_model(MODEL_NAME, "./results/sft")
-        response = generate(model, tokenizer, test_prompt)
-        print(response)
+def main(questions):
+    results = []
+
+    for question in questions:
+        test_prompt = f"{question}\n\nResponse:"
+        print(f"=== Question: {question} ===\n")
+
+        # Original model
+        print("1. ORIGINAL MODEL:")
+        model, tokenizer = load_model(MODEL_NAME)
+        response_orig = generate(model, tokenizer, test_prompt)
+        print(response_orig)
         del model, tokenizer
         torch.cuda.empty_cache()
-    else:
-        print("SFT model not found!")
-    
-    print("\n" + "="*50 + "\n")
-    
-    # DPO model
-    print("3. DPO MODEL:")
-    if os.path.exists("./results/dpo"):
-        model, tokenizer = load_model(MODEL_NAME, "./results/dpo")
-        response = generate(model, tokenizer, test_prompt)
-        print(response)
-        del model, tokenizer
-        torch.cuda.empty_cache()
-    else:
-        print("DPO model not found!")
+
+        print("\n" + "="*50 + "\n")
+
+        # SFT model
+        print("2. SFT MODEL:")
+        if os.path.exists("./results/sft"):
+            model, tokenizer = load_model(MODEL_NAME, "./results/sft")
+            response_sft = generate(model, tokenizer, test_prompt)
+            print(response_sft)
+            del model, tokenizer
+            torch.cuda.empty_cache()
+        else:
+            response_sft = "SFT model not found!"
+            print(response_sft)
+
+        print("\n" + "="*50 + "\n")
+
+        # DPO model
+        print("3. DPO MODEL:")
+        if os.path.exists("./results/dpo"):
+            model, tokenizer = load_model(MODEL_NAME, "./results/dpo")
+            response_dpo = generate(model, tokenizer, test_prompt)
+            print(response_dpo)
+            del model, tokenizer
+            torch.cuda.empty_cache()
+        else:
+            response_dpo = "DPO model not found!"
+            print(response_dpo)
+
+        print("\n" + "="*50 + "\n")
+
+        results.append({
+            "question": question,
+            "original_response": response_orig,
+            "sft_response": response_sft,
+            "dpo_response": response_dpo,
+        })
+
+    # Save results to CSV
+    with open("responses.csv", "w", newline="", encoding="utf-8") as f:
+        writer = csv.DictWriter(f, fieldnames=["question", "original_response", "sft_response", "dpo_response"])
+        writer.writeheader()
+        writer.writerows(results)
 
 if __name__ == "__main__":
-    question = "Explain what is RNN in AI in simple terms."
-    test_prompt = f"{question}\n\nResponse:"
-    main(test_prompt)
+    questions = [
+        "Explain what is RNN in AI in simple terms.",
+        "What is the difference between supervised and unsupervised learning?",
+        "How does attention mechanism work in Transformers?",
+    ]
+    main(questions)
