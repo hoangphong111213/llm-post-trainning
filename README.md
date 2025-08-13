@@ -24,21 +24,6 @@ Fine-tunes **Qwen/Qwen3-0.6B** model through:
 - **SFT**: [Alpaca Dataset](https://huggingface.co/datasets/tatsu-lab/alpaca) - 52K instruction-following examples
 - **DPO**: [HH-RLHF Dataset](https://huggingface.co/datasets/Dahoas/full-hh-rlhf) - Human preference pairs (limited to 10K samples)
 
-## Sample Results
-
-The pipeline shows clear improvement across training stages:
-
-| Stage | Quality | Instruction Following | Coherence |
-|-------|---------|----------------------|-----------|
-| Original | Basic | Poor | Low |
-| SFT | Good | Strong | High |
-| DPO | Excellent | Excellent | Very High |
-
-Example comparison for "Explain what is RNN in AI in simple terms":
-
-- **Original**: Fragmented explanation with unrelated Q&A format
-- **SFT**: Clear, structured explanation covering key concepts
-- **DPO**: Comprehensive explanation with practical applications and context
 
 ## Quick Start
 
